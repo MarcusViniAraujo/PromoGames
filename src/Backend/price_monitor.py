@@ -6,7 +6,7 @@ import json
 import os
 
 
-token = "8736406764:AAE9X2LkYU165xZz0XcI0ZbQhYRnY4W2pEQ"
+token = ""
 
 def search_game(name):
     url = "https://store.steampowered.com/api/storesearch/"
