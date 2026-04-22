@@ -4,9 +4,13 @@ import time
 import threading
 import json
 import os
+from dotenv import load_dotenv
 
 
-token = ""
+load_dotenv()
+token = os.getenv("TELEGRAM_TOKEN")
+if not token:
+    print("ERRO: TELEGRAM_TOKEN não configurado no .env!")
 
 def search_game(name):
     url = "https://store.steampowered.com/api/storesearch/"

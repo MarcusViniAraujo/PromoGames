@@ -1,88 +1,115 @@
-import threading
-from database import JogoMonitorado, Session, criar_banco
-from auth import login_usuario, cadastrar_usuario
-from price_monitor import monitor_prices, search_game, get_game_info
+import requests
+import sys
 
-def menu_logado(usuario):
-    # Abrimos uma única sessão para o menu ou gerenciamos dentro de cada opção
-    while True:
-        print(f"\n--- 🎮 Menu de {usuario.nome} ---")
-        print("1. Adicionar Jogo para Monitorar")
-        print("2. Listar Meus Jogos")
-        print("3. Sair")
-        
-        op = input("Escolha: ")
-        session = Session() # Abre a conexão
+# O endereço onde o servidor está rodando
+BASE_URL = "http://127.0.0.1:8000"
 
-        if op == "1":
-            nome_busca = input("Nome do jogo: ")
-            appid, nome_steam = search_game(nome_busca)
-            if appid:
-                # Evitar duplicatas para o mesmo usuário
-                existe = session.query(JogoMonitorado).filter_by(usuario_id=usuario.id, appid_steam=appid).first()
-                if not existe:
-                    novo_jogo = JogoMonitorado(
-                        usuario_id=usuario.id,
-                        appid_steam=appid,
-                        nome_jogo=nome_steam,
-                        ultimo_preco=get_game_info(appid),
-                        preco_alvo=0.0 
-                    )
-                    session.add(novo_jogo)
-                    session.commit()
-                    print(f" {nome_steam} adicionado!")
-                else:
-                    print(" Você já monitora este jogo.")
-            else:
-                print(" Jogo não encontrado.")
+# Variável para armazenar o usuário logado no cliente
+usuario_logado = None
 
-        elif op == "2":
-            meus_jogos = session.query(JogoMonitorado).filter_by(usuario_id=usuario.id).all()
-            if not meus_jogos:
-                print("Você ainda não monitora nenhum jogo.")
-            for j in meus_jogos:
-                print(f"- {j.nome_jogo}: R${j.ultimo_preco:.2f}")
-
-        elif op == "3":
-            session.close()
-            break
-        
-        session.close() # Sempre fecha para não travar o SQLite
-
-def main():
-    criar_banco() # Garante que o .db existe
+def fazer_login():
+    global usuario_logado
+    email = input("Email: ")
+    senha = input("Senha: ")
     
-    # Inicia o monitor em segundo plano
-    # IMPORTANTE: Mudei o nome para 'monitor_prices' conforme criamos antes
-    t = threading.Thread(target=monitor_prices, daemon=True)
-    t.start()
+    # Enviando dados para o servidor validar
+    response = requests.post(f"{BASE_URL}/login", json={"email": email, "senha": senha})
+    
+    if response.status_code == 200:
+        usuario_logado = response.json() # Armazena os dados do usuário (ex: id, nome)
+        print(f"👋 Bem-vindo, {usuario_logado['nome']}!")
+        return True
+    else:
+        # Captura a mensagem de erro específica do servidor
+        erro = response.json().get("detail", "Erro desconhecido")
+        print(f"❌ {erro}") # Vai imprimir: "❌ E-mail ou senha incorretos."
+        return False
 
+def adicionar_jogo():
+    nome = input("Nome do jogo: ")
+    
+    try:
+        response = requests.get(f"{BASE_URL}/search_game", params={"name": nome})
+        
+        if response.status_code != 200:
+            print("❌ Jogo não encontrado na Steam.")
+            return
+            
+        dados = response.json()
+        appid = dados['appid']
+        nome_steam = dados['name']
+        
+    except requests.exceptions.ConnectionError:
+        print("❌ Erro: Não foi possível conectar ao servidor. Ele está rodando?")
+        return
+
+    payload = {
+        "user_id": usuario_logado['id'], 
+        "appid": appid, 
+        "nome": nome_steam
+    }
+    
+    response = requests.post(f"{BASE_URL}/adicionar_jogo", json=payload)
+    
+    if response.status_code == 200:
+        print(f"✅ {nome_steam} adicionado com sucesso!")
+    else:
+        erro = response.json().get("detail", "Erro desconhecido")
+        print(f"❌ Erro ao adicionar: {erro}")
+
+def listar_meus_jogos():
+    response = requests.get(f"{BASE_URL}/listar_jogos/{usuario_logado['id']}")
+    
+    if response.status_code == 200:
+        jogos = response.json()
+        if not jogos:
+            print("\nVocê ainda não possui jogos monitorados.")
+        else:
+            print("\n--- Meus Jogos ---")
+            for j in jogos:
+                print(f"- {j['nome']}: R${j['preco']:.2f}")
+
+def fazer_cadastro():
+    print("\n--- Novo Cadastro ---")
+    nome = input("Nome: ")
+    email = input("Email: ")
+    senha = input("Senha: ")
+    cid = input("Chat ID Telegram: ")
+    
+    # Enviando para a API
+    payload = {"nome": nome, "email": email, "senha": senha, "chat_id": cid}
+    response = requests.post(f"{BASE_URL}/cadastro", json=payload)
+    
+    if response.status_code == 200:
+        print("✅ Cadastro realizado com sucesso! Agora você pode logar.")
+
+    else:
+        # Captura a mensagem de erro do servidor
+        erro = response.json().get("detail", "Erro desconhecido")
+        print(f"❌ {erro}") # Vai imprimir: "❌ Este e-mail já está cadastrado."
+def main():
     while True:
-        print("\n=== VIGIA STEAM PRO ===")
+        print("\n=== VIGIA STEAM ===")
         print("1. Login")
-        print("2. Cadastro")
+        print("2. Cadastrar")
         print("3. Sair")
         
         escolha = input("Opção: ")
         
         if escolha == "1":
-            email = input("Email: ")
-            senha = input("Senha: ")
-            user = login_usuario(email, senha)
-            if user:
-                menu_logado(user)
-            else:
-                print("Credenciais inválidas.")
-        
+            if fazer_login():
+                while True: # Menu Logado
+                    print("\n1. Adicionar Jogo | 2. Listar | 3. Logout")
+                    sub = input("Escolha: ")
+                    if sub == "1": adicionar_jogo()
+                    elif sub == "2": listar_meus_jogos()
+                    elif sub == "3": break
+
         elif escolha == "2":
-            nome = input("Nome: ")
-            email = input("Email: ")
-            senha = input("Senha: ")
-            cid = input("Chat ID Telegram: ")
-            cadastrar_usuario(nome, email, senha, cid)
-            
+            fazer_cadastro()
+
         elif escolha == "3":
-            break
+            sys.exit()
 
 if __name__ == "__main__":
     main()

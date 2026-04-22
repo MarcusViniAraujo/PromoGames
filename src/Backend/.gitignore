@@ -1,0 +1,15 @@
+# --- Segredos e Configurações ---
+.env
+
+# --- Banco de Dados ---
+PromoGames.db
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Editor de código ---
+.vscode/
+.idea/
