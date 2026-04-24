@@ -72,4 +72,4 @@ def monitor_prices():
             session.rollback()
         finally:
             session.close()
-        time.sleep(60)
+        time.sleep(7200)

@@ -4,6 +4,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 # Imports do seu projeto
 from database import Session, JogoMonitorado, Usuario, criar_banco
@@ -16,6 +17,13 @@ token = os.getenv("TELEGRAM_TOKEN")
 
 app = FastAPI()
 criar_banco()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"], # URL do React
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Modelos de Dados ---
 class LoginRequest(BaseModel):
