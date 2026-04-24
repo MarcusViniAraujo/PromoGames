@@ -1,36 +1,28 @@
 # 🎮 PromoGames - Monitor Inteligente de Preços Steam
 
-O **PromoGames** é uma solução completa para monitoramento de preços de jogos na Steam. Com uma arquitetura moderna baseada em **Cliente-Servidor (FastAPI)**, o sistema permite que múltiplos usuários gerenciem suas listas de desejos de forma privada, com notificações em tempo real enviadas diretamente via Telegram.
+O **PromoGames** é uma solução Full-Stack completa para monitoramento de preços de jogos na Steam. O sistema permite que usuários gerenciem suas listas de desejos e recebam notificações instantâneas quando um jogo atingir um valor desejado, garantindo economia e praticidade.
 
----
+
 
 ## 🏗️ Arquitetura do Projeto
 
-O sistema foi redesenhado para separar as responsabilidades:
-* **Servidor (`server.py`):** Gerencia a API, autenticação, persistência de dados e a execução do monitor de preços em segundo plano (background thread).
-* **Cliente (`main.py`):** Interface de linha de comando para o usuário interagir com o sistema, realizar buscas e gerenciar jogos.
+O projeto adota uma arquitetura de separação de responsabilidades (Separation of Concerns):
 
----
+* **Frontend:** Interface Web moderna desenvolvida com **React (Vite)** e **Tailwind CSS**. Focada em uma experiência de usuário (UX) fluida e responsiva.
+* **Backend:** API RESTful robusta desenvolvida em **FastAPI (Python)**. Gerencia a autenticação, persistência de dados e a lógica de monitoramento.
+* **Banco de Dados:** Utiliza **SQLite** com o ORM **SQLAlchemy**, garantindo integridade e simplicidade na gestão dos dados.
 
-## 🚀 Funcionalidades Principais
+## 🚀 Funcionalidades
 
-- **Arquitetura Cliente-Servidor:** Separação clara entre a lógica de negócio (servidor) e a interação com o usuário (cliente).
-- **Autenticação Segura:** Sistema de login com hashing de senhas.
-- **Monitoramento Robusto:** Processamento assíncrono via *Threading* para checagens 24/7 sem interrupções.
-- **Configuração via Variáveis de Ambiente:** Uso de `.env` para proteger tokens e credenciais.
-- **Integração Telegram:** Notificações instantâneas de promoções.
-- **Banco de Dados Relacional:** ORM completo utilizando SQLAlchemy.
-
----
+- **Monitoramento em tempo real:** Verificação automática de preços na Steam.
+- **Autenticação Segura:** Sistema de login e cadastro com armazenamento de senhas hashadas.
+- **Notificações:** Integração com Telegram Bot para alertas de promoções.
+- **Interface Responsiva:** Dashboard intuitivo para gerenciamento de jogos monitorados.
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Linguagem:** [Python 3.13+](https://www.python.org/)
-- **Framework Web (API):** [FastAPI](https://fastapi.tiangolo.com/)
-- **Banco de Dados:** SQLite
-- **ORM:** [SQLAlchemy](https://www.sqlalchemy.org/)
-- **Variáveis de Ambiente:** [python-dotenv](https://pypi.org/project/python-dotenv/)
-- **Segurança:** [Bcrypt](https://pypi.org/project/bcrypt/)
-- **Consumo de API:** [Requests](https://requests.readthedocs.io/)
-
----
+| Camada | Tecnologia |
+| :--- | :--- |
+| **Frontend** | React, Vite, Tailwind CSS, React Router |
+| **Backend** | Python 3.13, FastAPI, SQLAlchemy, Bcrypt |
+| **Outros** | SQLite, python-dotenv, Requests |
